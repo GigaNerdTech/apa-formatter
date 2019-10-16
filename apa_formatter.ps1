@@ -11,9 +11,9 @@ $paper_abstract_title = "Abstract"
 $paper_author = ""
 $references_title = "References"
 $institution_name = ""
-$font = "Calibri"
+$font = "Times New Roman"
 $title_page_font_size = "16"
-$body_font_size = "11"
+$body_font_size = "12"
 $start_page_number = 2
 
 
@@ -150,7 +150,7 @@ $current_selection.InsertNewPage()
 
 # Process main body section
 $current_selection.ParagraphFormat.Alignment = [Microsoft.Office.Interop.Word.wdParagraphAlignment]::wdAlignParagraphLeft # Set alignment to left
-
+$current_selection.ParagraphFormat.CharacterUnitFirstLineIndent = 5
 # Get main body text
 $main_body_text = ($MainBodyTextBox.Text).Trim()
 
@@ -182,7 +182,8 @@ foreach ($line in $references_text) {
         $current_selection.TypeParagraph()
     }
 }
-
+# Set hanging indent for references
+$word_document.Sections(2).Paragraph.FirstLineIndent = -1
 
 # Rest of header pages
 $new_header = $word_document.Sections(1).Headers([Microsoft.Office.Interop.Word.WdHeaderFooterIndex]::wdHeaderFooterPrimary)
