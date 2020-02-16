@@ -13,6 +13,7 @@ $references_title = "References"
 $institution_name = ""
 $font = "Times New Roman"
 $title_page_font_size = "16"
+$author_lines_font_size = "14"
 $body_font_size = "12"
 $start_page_number = 2
 
@@ -30,6 +31,10 @@ $start_page_number = 2
         <TextBox x:Name="TitleTextBox"/>
         <Label x:Name="Author" Content="Paper Author (First M Last)"/>
         <TextBox x:Name="AuthorTextBox"/>
+        <Label x:Name="InstructorName" Content="Instructor Name"/>
+        <TextBox x:Name="InstructorTextBox"/>
+        <Label x:Name="CourseName" Content="Course Name"/>
+        <TextBox x:Name="CourseTextBox"/>
         <Label x:Name="Institution" Content="Institution Name"/>
         <TextBox x:Name="InstitutionTextBox"/>
         <Label x:Name="AbstractText" Content="Abstract Text"/>
@@ -57,6 +62,8 @@ $xaml.SelectNodes("//*[@Name]") | %{Set-Variable -Name ($_.Name) -Value $global:
 $TitleTextBox = $global:Form.FindName('TitleTextBox')
 $AuthorTextBox = $global:Form.FindName('AuthorTextBox')
 $InstitutionTextBox = $global:Form.FindName('InstitutionTextBox')
+$CourseTextBox = $global:Form.FindName('CourseTextBox')
+$InstructorTextBox = $global:Form.FindName('InstructorTextBox')
 $AbstractTextBox = $global:Form.FindName('AbstractTextBox')
 $MainBodyTextBox = $global:Form.FindName('MainBodyTextBox')
 $ReferencesTextBox = $global:Form.FindName('ReferencesTextBox')
@@ -80,6 +87,8 @@ $paper_title = $TitleTextBox.Text
 $paper_author = $AuthorTextBox.Text
 $institution_name = $InstitutionTextBox.Text
 $word_path = $WordPathTextBox.Text
+$course_name = $CourseTextBox.Text
+$instructor_name = $InstructorTextBox.Text
 
 # Error checking
 if ([string]::IsNullOrWhiteSpace($paper_title)) {
@@ -125,9 +134,18 @@ $current_selection.TypeText("`v`v`v")
 $current_selection.ParagraphFormat.Alignment = [Microsoft.Office.Interop.Word.wdParagraphAlignment]::wdAlignParagraphCenter # Set alignment to center
 $current_selection.TypeText($paper_title)
 $current_selection.TypeText("`v")
+$current_selection.Font.Size = $author_lines_font_size
 $current_selection.TypeText($paper_author)
 $current_selection.TypeText("`v")
+$current_selection.Typetext($instructor_name)
+$current_selection.Typetext("`v")
+$current_selection.Typetext($course_name)
+$current_selection.Typetext("`v")
 $current_selection.Typetext($institution_name)
+$current_selection.Typetext("`v")
+$current_selection.Typetext($(get-date -Format 'MMMM d, yyyy'))
+$current_selection.Typetext("`v")
+
 
 # Insert page break
 $current_selection.InsertNewPage()
@@ -137,16 +155,20 @@ $current_selection.InsertNewPage()
 $current_selection.ParagraphFormat.Alignment = [Microsoft.Office.Interop.Word.wdParagraphAlignment]::wdAlignParagraphCenter # Set alignment to center
 $current_selection.ParagraphFormat.LineSpacingRule = 2 # Set double spacing
 $current_selection.Font.Size = $body_font_size
-$current_selection.TypeText($paper_abstract_title)
-$current_selection.TypeParagraph()
 
-# Get abstract text
-$current_selection.ParagraphFormat.Alignment = [Microsoft.Office.Interop.Word.wdParagraphAlignment]::wdAlignParagraphLeft # Set alignment to left
-$abstract_text = ($AbstractTextBox.Text).Trim()
-$current_selection.TypeText($abstract_text)
+# Only insert abstract if one is present, otherwise skip
+if (-not [string]::IsNullOrWhiteSpace($AbstractTextBox.Text)) {
+    $current_selection.TypeText($paper_abstract_title)
+    $current_selection.TypeParagraph()
 
-# Insert page break
-$current_selection.InsertNewPage()
+    # Get abstract text
+    $current_selection.ParagraphFormat.Alignment = [Microsoft.Office.Interop.Word.wdParagraphAlignment]::wdAlignParagraphLeft # Set alignment to left
+    $abstract_text = ($AbstractTextBox.Text).Trim()
+    $current_selection.TypeText($abstract_text)
+
+    # Insert page break
+    $current_selection.InsertNewPage()
+}
 
 # Process main body section
 $current_selection.ParagraphFormat.Alignment = [Microsoft.Office.Interop.Word.wdParagraphAlignment]::wdAlignParagraphLeft # Set alignment to left
@@ -175,6 +197,9 @@ $current_selection.ParagraphFormat.Alignment = [Microsoft.Office.Interop.Word.wd
 # Get references text
 $references_text = ($ReferencesTextBox.Text).Trim()
 
+# Set hanging indent for references
+$current_selection.Paragraph.FirstLineIndent = -1
+
 # Process references
 foreach ($line in $references_text) {
     $current_selection.TypeText($line)
@@ -182,8 +207,7 @@ foreach ($line in $references_text) {
         $current_selection.TypeParagraph()
     }
 }
-# Set hanging indent for references
-$word_document.Sections(2).Paragraph.FirstLineIndent = -1
+
 
 # Rest of header pages
 $new_header = $word_document.Sections(1).Headers([Microsoft.Office.Interop.Word.WdHeaderFooterIndex]::wdHeaderFooterPrimary)
