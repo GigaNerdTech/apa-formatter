@@ -38,7 +38,11 @@ Main body section
 
 References section
 
-No indentations in paragraphs
+No indents in abstract.
+
+First line indents in main body.
+
+Hanging indents in References.
 
 
 Limitations:
