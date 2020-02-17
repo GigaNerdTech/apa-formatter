@@ -1,4 +1,4 @@
-﻿# Powershell script to generate APA formatted Word Document
+# Powershell script to generate APA formatted Word Document
 # Written by Joshua Woleben
 # 9/15/2019
 
@@ -25,7 +25,7 @@ $start_page_number = 2
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        Title="APA Formatter" Height="1000" Width="450" MinHeight="500" MinWidth="400" ResizeMode="CanResizeWithGrip">
+        Title="APA Formatter" Height="1100" Width="450" MinHeight="500" MinWidth="400" ResizeMode="CanResizeWithGrip">
     <StackPanel>
         <Label x:Name="Title" Content="Paper Title"/>
         <TextBox x:Name="TitleTextBox"/>
@@ -108,6 +108,8 @@ if ([string]::IsNullOrWhiteSpace($word_path)) {
     return
 }
 
+$index = 0
+
 # Open Word object
 $word_object = New-Object -ComObject Word.Application
 $word_object.Visible = $true
@@ -160,11 +162,13 @@ $current_selection.Font.Size = $body_font_size
 if (-not [string]::IsNullOrWhiteSpace($AbstractTextBox.Text)) {
     $current_selection.TypeText($paper_abstract_title)
     $current_selection.TypeParagraph()
+    $index++
 
     # Get abstract text
     $current_selection.ParagraphFormat.Alignment = [Microsoft.Office.Interop.Word.wdParagraphAlignment]::wdAlignParagraphLeft # Set alignment to left
     $abstract_text = ($AbstractTextBox.Text).Trim()
     $current_selection.TypeText($abstract_text)
+    $index++
 
     # Insert page break
     $current_selection.InsertNewPage()
@@ -181,6 +185,7 @@ foreach ($line in $main_body_text) {
     $current_selection.TypeText($line)
     if ($line -match "\n") {
         $current_selection.TypeParagraph()
+        $index++
     }
 }
 
@@ -198,11 +203,13 @@ $current_selection.ParagraphFormat.Alignment = [Microsoft.Office.Interop.Word.wd
 $references_text = ($ReferencesTextBox.Text).Trim()
 
 # Set hanging indent for references
-$current_selection.Paragraph.FirstLineIndent = -1
+# $current_selection.Paragraph.FirstLineIndent = -1
 
+#$current_selection.InsertBreak([Microsoft.Office.Interop.Word.wdBreakType]::wdSectionBreakContinuous)
+$current_selection.ParagraphFormat.CharacterUnitFirstLineIndent = -5
 # Process references
 foreach ($line in $references_text) {
-    $current_selection.TypeText($line)
+   $current_selection.TypeText($line)
     if ($line -match "\n") {
         $current_selection.TypeParagraph()
     }
